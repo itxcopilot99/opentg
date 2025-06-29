@@ -382,6 +382,8 @@ async def gchat_command(client: Client, message: Message):
             return
         command = parts[1].lower()
         user_id = int(parts[2]) if len(parts) > 2 and parts[2].isdigit() else message.chat.id
+        # Add spoiler formatting for the user_id
+        user_id_spoiler = f"||{user_id}||"
         if command == "on":
             if user_id in disabled_users:
                 disabled_users.remove(user_id)
@@ -389,7 +391,7 @@ async def gchat_command(client: Client, message: Message):
             if user_id not in enabled_users:
                 enabled_users.append(user_id)
                 db.set(collection, "enabled_users", enabled_users)
-            await send_reply(message.edit_text, (f"ON: {user_id}",), {}, client)
+            await send_reply(message.edit_text, (f"ON: {user_id_spoiler}",), {}, client)
         elif command == "off":
             if user_id not in disabled_users:
                 disabled_users.append(user_id)
@@ -397,10 +399,10 @@ async def gchat_command(client: Client, message: Message):
             if user_id in enabled_users:
                 enabled_users.remove(user_id)
                 db.set(collection, "enabled_users", enabled_users)
-            await send_reply(message.edit_text, (f"OFF: {user_id}",), {}, client)
+            await send_reply(message.edit_text, (f"OFF: {user_id_spoiler}",), {}, client)
         elif command == "del":
             db.set(collection, f"chat_history.{user_id}", None)
-            await send_reply(message.edit_text, (f"Deleted: {user_id}",), {}, client)
+            await send_reply(message.edit_text, (f"Deleted: {user_id_spoiler}",), {}, client)
         elif command == "all":
             global gchat_for_all
             gchat_for_all = not gchat_for_all
@@ -418,7 +420,7 @@ async def gchat_command(client: Client, message: Message):
                 changed = True
             await send_reply(
                 message.edit_text,
-                (f"Removed: {user_id}" if changed else f"Not found: {user_id}",),
+                (f"Removed: {user_id_spoiler}" if changed else f"Not found: {user_id_spoiler}",),
                 {}, client)
         else:
             await send_reply(message.edit_text, ("Usage: gchat [on|off|del|all|r] [user_id]",), {}, client)
@@ -469,14 +471,15 @@ async def set_custom_role(client: Client, message: Message):
             custom_role = " ".join(parts[2:]).strip()
         elif len(parts) > 1:
             custom_role = " ".join(parts[1:]).strip()
+        user_id_spoiler = f"||{user_id}||"
         if not custom_role:
             db.set(collection, f"custom_roles.{user_id}", default_role)
             db.set(collection, f"chat_history.{user_id}", None)
-            await send_reply(message.edit_text, (f"Role reset: {user_id}",), {}, client)
+            await send_reply(message.edit_text, (f"Role reset: {user_id_spoiler}",), {}, client)
         else:
             db.set(collection, f"custom_roles.{user_id}", custom_role)
             db.set(collection, f"chat_history.{user_id}", None)
-            await send_reply(message.edit_text, (f"Role set: {user_id}\n{custom_role}",), {}, client)
+            await send_reply(message.edit_text, (f"Role set: {user_id_spoiler}\n{custom_role}",), {}, client)
         await send_reply(message.delete, (), {}, client)
     except Exception as e:
         await send_reply(client.send_message, ("me", f"role command error:\n\n{str(e)}"), {}, client)
